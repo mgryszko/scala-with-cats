@@ -1,4 +1,4 @@
-package sandbox
+package sandbox.chapter2
 
 import cats.Monoid
 

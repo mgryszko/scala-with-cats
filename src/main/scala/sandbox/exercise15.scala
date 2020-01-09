@@ -1,4 +1,4 @@
-package sandbox
+package sandbox.chapter1
 
 object EqInstances {
   import cats.Eq

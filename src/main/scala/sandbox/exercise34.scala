@@ -1,4 +1,4 @@
-package sandbox
+package sandbox.chapter3
 
 import cats.Functor
 

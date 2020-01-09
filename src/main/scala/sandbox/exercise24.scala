@@ -1,4 +1,4 @@
-package sandbox
+package sandbox.chapter2
 
 object SetInstances {
   import cats.Monoid

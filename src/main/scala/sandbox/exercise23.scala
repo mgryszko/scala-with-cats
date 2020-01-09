@@ -1,4 +1,4 @@
-package sandbox
+package sandbox.chapter2
 
 object LogicalInstances {
   import cats.Monoid
