@@ -52,21 +52,3 @@ object RPN {
   }
 }
 
-/*
-import sandbox.chapter4.RPN._
-
-val program = for {
-  _ <- evalAll(List("1", "2", "+"))
-  _ <- evalAll(List("3", "4", "+"))
-  ans <- evalOne("*")
-} yield ans
-
-evalAll(List("1", "2", "+", "3", "*")).run(Nil).value
-
-evalOne("1").run(Nil).value
-evalOne("1").run(List(2)).value
-evalOne("+").run(List(1, 2)).value
-evalOne("*").run(List(2, 3)).value
-evalOne("-").run(List(2, 3)).value
-evalOne("/").run(List(6, 3)).value
- */
