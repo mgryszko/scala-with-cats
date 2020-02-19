@@ -38,6 +38,9 @@ sealed trait Check[E, A, B] {
 
   def flatMap[C](func: B => Check[E, A, C]): Check[E, A, C] =
     FlatMap(this, func)
+
+  def andThen[C](that: Check[E, B, C]): Check[E, A, C] =
+    AndThen(this, that)
 }
 
 final case class PureC[E, A](pred: Predicate[E, A]) extends Check[E, A, A] {
@@ -56,4 +59,9 @@ final case class FlatMap[E, A, B, C](check: Check[E, A, B], func: B => Check[E, 
       case Invalid(e) => e.invalid
     }
   }
+}
+
+final case class AndThen[E, A, B, C](check1: Check[E, A, B], check2: Check[E, B, C]) extends Check[E, A, C] {
+  override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, C] =
+    check1(a).andThen(check2(_))
 }
