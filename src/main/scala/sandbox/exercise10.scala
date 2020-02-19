@@ -7,9 +7,9 @@ import cats.syntax.apply._
 import cats.syntax.validated._
 import cats.syntax.semigroup._
 
-sealed trait Check[E, A] {
+sealed trait Predicate[E, A] {
   def apply(value: A)(implicit s: Semigroup[E]): Validated[E, A] = this match {
-    case Pure(func) => func(value)
+    case PureP(func) => func(value)
     case And(check1, check2) => (check1(value), check2(value)).mapN((_, _) => value)
     case Or(check1, check2) => (check1(value), check2(value)) match {
       case (Valid(_), Valid(_)) => value.valid
@@ -19,14 +19,41 @@ sealed trait Check[E, A] {
     }
   }
 
-  def and(that: Check[E, A]): Check[E, A] = And(this, that)
+  def and(that: Predicate[E, A]): Predicate[E, A] = And(this, that)
 
-  def or(that: Check[E, A]): Check[E, A] = Or(this, that)
+  def or(that: Predicate[E, A]): Predicate[E, A] = Or(this, that)
 }
 
-final case class Pure[E, A](func: A => Validated[E, A]) extends Check[E, A]
+final case class PureP[E, A](func: A => Validated[E, A]) extends Predicate[E, A]
 
-final case class And[E, A](check1: Check[E, A], check2: Check[E, A]) extends Check[E, A]
+final case class And[E, A](check1: Predicate[E, A], check2: Predicate[E, A]) extends Predicate[E, A]
 
-final case class Or[E, A](check1: Check[E, A], check2: Check[E, A]) extends Check[E, A]
+final case class Or[E, A](check1: Predicate[E, A], check2: Predicate[E, A]) extends Predicate[E, A]
 
+sealed trait Check[E, A, B] {
+  def apply(a: A)(implicit s: Semigroup[E]): Validated[E, B]
+
+  def map[C](func: B => C): Check[E, A, C] =
+    Map(this, func)
+
+  def flatMap[C](func: B => Check[E, A, C]): Check[E, A, C] =
+    FlatMap(this, func)
+}
+
+final case class PureC[E, A](pred: Predicate[E, A]) extends Check[E, A, A] {
+  override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, A] = pred(a)
+}
+
+final case class Map[E, A, B, C](check: Check[E, A, B], func: B => C) extends Check[E, A, C] {
+  override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, C] =
+    check(a).map(func)
+}
+
+final case class FlatMap[E, A, B, C](check: Check[E, A, B], func: B => Check[E, A, C]) extends Check[E, A, C] {
+  override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, C] = {
+    check(a) match {
+      case Valid(b) => func(b)(a)
+      case Invalid(e) => e.invalid
+    }
+  }
+}
