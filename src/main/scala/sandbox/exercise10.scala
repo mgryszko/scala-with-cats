@@ -1,13 +1,16 @@
 package sandbox.chapter10
 
-import cats.data.{NonEmptyList, Validated}
+import cats.data.{Kleisli, NonEmptyList, Validated}
 import cats.data.Validated.{Invalid, Valid}
 import cats.kernel.Semigroup
 import cats.syntax.apply._
 import cats.syntax.validated._
 import cats.syntax.semigroup._
+import cats.instances.either._
 
 sealed trait Predicate[E, A] {
+  def run(implicit s: Semigroup[E]): A => Either[E, A] = value => apply(value).toEither
+
   def apply(value: A)(implicit s: Semigroup[E]): Validated[E, A] = this match {
     case Predicate.Pure(func) => func(value)
     case Predicate.And(pred1, pred2) => (pred1(value), pred2(value)).mapN((_, _) => value)
@@ -38,53 +41,13 @@ object Predicate {
     Pure(a => if(fn(a)) a.valid else err.invalid)
 }
 
-sealed trait Check[E, A, B] {
-  def apply(a: A)(implicit s: Semigroup[E]): Validated[E, B]
-
-  def map[C](func: B => C): Check[E, A, C] = Check.Map(this, func)
-
-  def flatMap[C](func: B => Check[E, A, C]): Check[E, A, C] = Check.FlatMap(this, func)
-
-  def andThen[C](that: Check[E, B, C]): Check[E, A, C] = Check.AndThen(this, that)
-}
-
-object Check {
-  final case class Pure[E, A, B](func: A => Validated[E, B]) extends Check[E, A, B] {
-    override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, B] =
-      func(a)
-  }
-
-  final case class PurePredicate[E, A](pred: Predicate[E, A]) extends Check[E, A, A] {
-    def apply(a: A)(implicit s: Semigroup[E]): Validated[E, A] =
-      pred(a)
-  }
-
-  final case class Map[E, A, B, C](check: Check[E, A, B], func: B => C) extends Check[E, A, C] {
-    override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, C] =
-      check(a).map(func)
-  }
-
-  final case class FlatMap[E, A, B, C](check: Check[E, A, B], func: B => Check[E, A, C]) extends Check[E, A, C] {
-    override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, C] = {
-      check(a) match {
-        case Valid(b) => func(b)(a)
-        case Invalid(e) => e.invalid
-      }
-    }
-  }
-
-  final case class AndThen[E, A, B, C](check1: Check[E, A, B], check2: Check[E, B, C]) extends Check[E, A, C] {
-    override def apply(a: A)(implicit s: Semigroup[E]): Validated[E, C] =
-      check1(a).andThen(check2(_))
-  }
-
-  def apply[E, A](pred: Predicate[E, A]): Check[E, A, A] = PurePredicate(pred)
-
-  def apply[E, A, B](func: A => Validated[E, B]): Check[E, A, B] = Pure(func)
-}
-
 object Checks {
   type Errors = NonEmptyList[String]
+  type Result[A] = Either[Errors, A]
+  type Check[A, B] = Kleisli[Result, A, B]
+
+  def check[A, B](func: A => Result[B]): Check[A, B] = Kleisli(func)
+  def checkPred[A](pred: Predicate[Errors, A]): Check[A, A] = Kleisli[Result, A, A](pred.run)
 
   def error(s: String): NonEmptyList[String] =
     NonEmptyList(s, Nil)
@@ -104,20 +67,22 @@ object Checks {
   /*
 • An email address must contain an @ sign. Split the string at the @. The string to the le􏰁 must not be empty. The string to the right must be at least three characters long and contain a dot.
    */
-  val validUsername: Check[Errors, String, String] = Check(longerThan(3).and(alphanumeric))
+  val validUsername: Check[String, String] = checkPred(longerThan(3).and(alphanumeric))
 
-  val validEmail: Check[Errors, String, String] =
-    Check(containsOnce('@'))
+  val validEmail: Check[String, String] =
+    checkPred(containsOnce('@'))
       .map(_.split('@'))
-      .andThen(Check { case Array(username, domain) =>
-        (validEmailUsername(username), validEmailDomain(domain)).mapN(_ + "@" + _)
+      .andThen(parts => parts match {
+        case Array(username, domain) =>
+          (validEmailUsername(username), validEmailDomain(domain))
+            .mapN(_ + "@" + _)
       })
 
-  val validEmailUsername: Check[Errors, String, String] = Check(longerThan(0))
-  val validEmailDomain: Check[Errors, String, String] = Check(longerThan(2).and(contains('.')))
+  val validEmailUsername: Check[String, String] = checkPred(longerThan(0))
+  val validEmailDomain: Check[String, String] = checkPred(longerThan(2).and(contains('.')))
 
   case class User(username: String, email: String)
 
-  def createUser(username: String, email: String): Validated[Errors, User] =
+  def createUser(username: String, email: String): Result[User] =
     (validUsername(username), validEmail(email)).mapN(User)
 }
