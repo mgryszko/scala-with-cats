@@ -10,8 +10,8 @@ import cats.syntax.semigroup._
 sealed trait Predicate[E, A] {
   def apply(value: A)(implicit s: Semigroup[E]): Validated[E, A] = this match {
     case Predicate.Pure(func) => func(value)
-    case Predicate.And(check1, check2) => (check1(value), check2(value)).mapN((_, _) => value)
-    case Predicate.Or(check1, check2) => (check1(value), check2(value)) match {
+    case Predicate.And(pred1, pred2) => (pred1(value), pred2(value)).mapN((_, _) => value)
+    case Predicate.Or(pred1, pred2) => (pred1(value), pred2(value)) match {
       case (Valid(_), Valid(_)) => value.valid
       case (Valid(_), Invalid(_)) => value.valid
       case (Invalid(_), Valid(_)) => value.valid
@@ -27,9 +27,9 @@ sealed trait Predicate[E, A] {
 object Predicate {
   final case class Pure[E, A](func: A => Validated[E, A]) extends Predicate[E, A]
 
-  final case class And[E, A](check1: Predicate[E, A], check2: Predicate[E, A]) extends Predicate[E, A]
+  final case class And[E, A](pred1: Predicate[E, A], pred2: Predicate[E, A]) extends Predicate[E, A]
 
-  final case class Or[E, A](check1: Predicate[E, A], check2: Predicate[E, A]) extends Predicate[E, A]
+  final case class Or[E, A](pred1: Predicate[E, A], pred2: Predicate[E, A]) extends Predicate[E, A]
 
   def apply[E, A](f: A => Validated[E, A]): Predicate[E, A] =
     Pure(f)
