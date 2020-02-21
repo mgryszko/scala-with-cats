@@ -1,17 +1,17 @@
 package sandbox.exercise11
 
-import cats.kernel.{BoundedSemilattice, CommutativeMonoid}
+import cats.kernel.{BoundedSemilattice, CommutativeMonoid, Monoid}
+import cats.instances.map._
+import cats.syntax.monoid._
 
-final case class GCounter(counters: Map[String, Int]) {
-  def increment(machine: String, amount: Int): GCounter =
-    GCounter(counters.updated(machine, counters.getOrElse(machine, 0) + amount))
+final case class GCounter[K, V](counters: Map[K, V]) {
+  def increment(key: K, value: V)(implicit m: Monoid[V]): GCounter[K, V] =
+    GCounter(counters.updated(key, counters.getOrElse(key, m.empty) |+| value))
 
-  def merge(that: GCounter): GCounter =
-    GCounter((counters.keySet ++ that.counters.keySet)
-      .map(key => key -> (counters.getOrElse(key, 0) max that.counters.getOrElse(key, 0)))
-      .toMap)
+  def merge(that: GCounter[K, V])(implicit bs: BoundedSemiLattice[V]): GCounter[K, V] =
+    GCounter(counters |+| that.counters)
 
-  def total: Int = counters.values.sum
+  def total(implicit m: CommutativeMonoid[V]): V = m.combineAll(counters.values)
 }
 
 trait BoundedSemiLattice[A] extends CommutativeMonoid[A] {
