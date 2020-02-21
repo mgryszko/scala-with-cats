@@ -1,4 +1,4 @@
-package sandbox.chapter4
+package scalacats.chapter4
 
 import cats.data.Writer
 import cats.instances.vector._

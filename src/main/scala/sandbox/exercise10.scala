@@ -1,4 +1,4 @@
-package sandbox.chapter10
+package scalacats.chapter10
 
 import cats.data.{Kleisli, NonEmptyList, Validated}
 import cats.data.Validated.{Invalid, Valid}

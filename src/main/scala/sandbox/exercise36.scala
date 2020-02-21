@@ -1,4 +1,4 @@
-package sandbox.chapter3
+package scalacats.chapter3
 
 final case class Box[A](value: A)
 

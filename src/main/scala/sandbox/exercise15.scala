@@ -1,4 +1,4 @@
-package sandbox.chapter1
+package scalacats.chapter1
 
 object EqInstances {
   import cats.Eq

@@ -1,4 +1,4 @@
-package sandbox.chapter2
+package scalacats.chapter2
 
 object SetInstances {
   import cats.Monoid

@@ -1,4 +1,4 @@
-package sandbox.chapter6
+package scalacats.chapter6
 
 import cats.data.Validated
 import cats.instances.list._

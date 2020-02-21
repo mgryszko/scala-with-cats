@@ -1,4 +1,4 @@
-package sandbox.chapter5
+package scalacats.chapter5
 
 import cats.data.EitherT
 import cats.instances.future._

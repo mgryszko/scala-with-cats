@@ -1,4 +1,4 @@
-package sandbox.exercise11
+package scalacats.exercise11
 
 import cats.kernel.{BoundedSemilattice, CommutativeMonoid}
 import cats.instances.list._

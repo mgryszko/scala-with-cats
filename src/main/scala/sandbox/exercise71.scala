@@ -1,4 +1,4 @@
-package sandbox.chapter7
+package scalacats.chapter7
 
 object ListFolding {
   def map[A, B](la: List[A])(f: A => B): List[B] =

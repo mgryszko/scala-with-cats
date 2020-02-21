@@ -1,4 +1,4 @@
-package sandbox.chapter3
+package scalacats.chapter3
 
 import cats.Functor
 

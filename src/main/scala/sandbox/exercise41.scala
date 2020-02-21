@@ -1,4 +1,4 @@
-package sandbox.chapter4
+package scalacats.chapter4
 
 trait MyMonad[F[_]] {
   def pure[A](a: A): F[A]

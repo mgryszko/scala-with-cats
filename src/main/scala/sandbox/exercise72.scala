@@ -1,4 +1,4 @@
-package sandbox.chapter7
+package scalacats.chapter7
 
 import cats.Applicative
 import cats.data.Validated

@@ -1,4 +1,4 @@
-package sandbox
+package scalacats
 
 import cats.instances.string._
 import cats.syntax.semigroup._

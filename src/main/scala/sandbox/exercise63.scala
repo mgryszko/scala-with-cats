@@ -1,4 +1,4 @@
-package sandbox.chapter6
+package scalacats.chapter6
 
 import cats.Monad
 import cats.syntax.flatMap._

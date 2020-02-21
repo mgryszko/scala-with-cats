@@ -1,4 +1,4 @@
-package sandbox.chapter8
+package scalacats.chapter8
 
 import cats.instances.list._
 import cats.syntax.functor._

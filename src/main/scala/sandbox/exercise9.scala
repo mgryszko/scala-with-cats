@@ -1,4 +1,4 @@
-package sandbox.chapter9
+package scalacats.chapter9
 
 import cats.instances.future._
 import cats.instances.vector._
